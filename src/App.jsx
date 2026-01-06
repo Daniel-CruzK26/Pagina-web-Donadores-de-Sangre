@@ -1,6 +1,7 @@
 import React from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
+import EligibilityForm from './components/eligibility/EligibilityForm';
 import InfoSection from './components/InfoSection';
 import Locator from './components/Locator';
 import Footer from './components/Footer';
@@ -12,6 +13,7 @@ function App() {
       <Navbar />
       <div className="main-content">
         <Hero />
+        <EligibilityForm />
         <InfoSection />
         <Locator />
       </div>
