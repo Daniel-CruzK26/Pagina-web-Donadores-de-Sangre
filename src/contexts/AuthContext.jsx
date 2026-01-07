@@ -107,6 +107,11 @@ export function AuthProvider({ children }) {
     try {
       const { error } = await supabase.auth.signOut()
       if (error) throw error
+      
+      // Limpiar estado local inmediatamente
+      setUser(null)
+      setProfile(null)
+      
       return { error: null }
     } catch (error) {
       return { error }

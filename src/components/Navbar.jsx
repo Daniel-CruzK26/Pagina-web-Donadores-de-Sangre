@@ -10,13 +10,14 @@ const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const handleSignOut = async () => {
+    setMobileMenuOpen(false)
+    navigate('/') // Navegar primero
+    
     const { error } = await signOut()
     if (error) {
       toast.error('Error al cerrar sesión')
     } else {
       toast.success('Sesión cerrada')
-      navigate('/')
-      setMobileMenuOpen(false)
     }
   }
 
