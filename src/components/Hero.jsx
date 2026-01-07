@@ -1,4 +1,4 @@
-import React from 'react';
+import { Link } from 'react-router-dom';
 import { MapPin } from 'lucide-react';
 
 const Hero = () => {
@@ -12,10 +12,10 @@ const Hero = () => {
                 <p className="hero-subtitle">
                     Convertirse en donador voluntario es un acto de amor y solidaridad. Encuentra el banco de sangre más cercano y únete a la causa hoy mismo.
                 </p>
-                <a href="#locator" className="btn-primary">
+                <Link to="/clinicas" className="btn-primary">
                     <MapPin size={20} />
                     Encontrar Clínica Cercana
-                </a>
+                </Link>
             </div>
         </section>
     );

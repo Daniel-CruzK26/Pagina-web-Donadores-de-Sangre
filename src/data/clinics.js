@@ -13,9 +13,10 @@ export const clinics = [
     id: 2,
     name: "Centro Nacional de la Transfusión Sanguínea",
     address:
-      "Av. Othón de Mendizábal 195, Zacatenco, Gustavo A. Madero, 07360 Ciudad de México, CDMX",
-    lat: 19.5034,
-    lng: -99.1476,
+      "Avenida Miguel Othón de Mendizabal Ote. 555, Nueva Industrial Vallejo, Gustavo A. Madero, 07700 Ciudad de México, CDMX",
+      
+    lat: 19.507579,
+    lng: -99.143793,
     phone: "55 5119 4620",
     hours: "Lun-Vie 8:00 - 15:00",
   },

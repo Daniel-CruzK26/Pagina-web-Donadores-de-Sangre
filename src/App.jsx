@@ -1,25 +1,51 @@
-import React from 'react';
-import Navbar from './components/Navbar';
-import Hero from './components/Hero';
-import EligibilityForm from './components/eligibility/EligibilityForm';
-import InfoSection from './components/InfoSection';
-import Locator from './components/Locator';
-import Footer from './components/Footer';
-import './App.css';
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import Navbar from './components/Navbar'
+import Footer from './components/Footer'
+import { HomePage } from './pages/HomePage'
+import { ClinicsPage } from './pages/ClinicsPage'
+import { Login } from './pages/Auth/Login'
+import { Signup } from './pages/Auth/Signup'
+import { ProtectedRoute } from './components/ProtectedRoute'
+import { DonorDashboard } from './pages/DonorDashboard'
+import { RequestDashboard } from './pages/RequestDashboard'
+import './App.css'
 
 function App() {
   return (
-    <div className="app-container">
-      <Navbar />
-      <div className="main-content">
-        <Hero />
-        <EligibilityForm />
-        <InfoSection />
-        <Locator />
+    <BrowserRouter>
+      <div className="app-container">
+        <Navbar />
+        <div className="main-content">
+          <Routes>
+            {/* Rutas públicas */}
+            <Route path="/" element={<HomePage />} />
+            <Route path="/clinicas" element={<ClinicsPage />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+
+            {/* Rutas protegidas */}
+            <Route
+              path="/donar"
+              element={
+                <ProtectedRoute>
+                  <DonorDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/solicitar"
+              element={
+                <ProtectedRoute>
+                  <RequestDashboard />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </div>
+        <Footer />
       </div>
-      <Footer />
-    </div>
-  );
+    </BrowserRouter>
+  )
 }
 
-export default App;
+export default App
