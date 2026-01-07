@@ -53,13 +53,16 @@ export function MapPicker({ onLocationSelect, initialPosition }) {
   const [address, setAddress] = useState('')
   const [loading, setLoading] = useState(false)
   const [map, setMap] = useState(null)
+  const hasInitialized = useRef(false)
 
   useEffect(() => {
-    if (initialPosition) {
+    // Solo inicializar una vez cuando initialPosition cambia
+    if (initialPosition && !hasInitialized.current) {
+      hasInitialized.current = true
       setPosition(initialPosition)
       handlePositionChange(initialPosition[0], initialPosition[1])
     }
-  }, [initialPosition])
+  }, []) // Array vacío - solo ejecutar al montar
 
   const handlePositionChange = async (lat, lng) => {
     setPosition([lat, lng])

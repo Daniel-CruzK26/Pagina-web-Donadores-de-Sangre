@@ -37,26 +37,31 @@ export function ResponsesList({ requestId, maxResponses }) {
 
   const loadResponses = async () => {
     try {
-      const { data, error } = await supabase
+      // Primero obtener las respuestas
+      const { data: responsesData, error: responsesError } = await supabase
         .from('donor_responses')
-        .select(`
-          id,
-          status,
-          response_message,
-          created_at,
-          donor:profiles!donor_responses_donor_id_fkey (
-            id,
-            full_name,
-            email,
-            phone,
-            blood_type
-          )
-        `)
+        .select('id, donor_id, status, response_message, created_at')
         .eq('request_id', requestId)
         .order('created_at', { ascending: false })
 
-      if (error) throw error
-      setResponses(data || [])
+      if (responsesError) throw responsesError
+
+      // Luego obtener los perfiles de los donadores
+      const donorIds = responsesData.map(r => r.donor_id)
+      const { data: donorsData, error: donorsError } = await supabase
+        .from('profiles')
+        .select('id, full_name, email, phone, blood_type')
+        .in('id', donorIds)
+
+      if (donorsError) throw donorsError
+
+      // Combinar los datos
+      const combinedData = responsesData.map(response => ({
+        ...response,
+        donor: donorsData.find(d => d.id === response.donor_id)
+      }))
+
+      setResponses(combinedData || [])
     } catch (error) {
       console.error('Error al cargar respuestas:', error)
       toast.error('Error al cargar respuestas')

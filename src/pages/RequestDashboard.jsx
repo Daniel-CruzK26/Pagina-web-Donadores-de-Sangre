@@ -120,6 +120,10 @@ export function RequestDashboard() {
 
     try {
       const phoneWithPrefix = `+52${formData.contact_phone}`
+      
+      // Calcular fecha de expiración: ahora + 14 días
+      const expiresAt = new Date()
+      expiresAt.setDate(expiresAt.getDate() + 14)
 
       const { data, error } = await supabase
         .from('donation_requests')
@@ -139,7 +143,8 @@ export function RequestDashboard() {
           additional_notes: formData.additional_notes || null,
           urgency: formData.urgency,
           max_responses: parseInt(formData.max_responses),
-          status: 'active'
+          status: 'active',
+          expires_at: expiresAt.toISOString()
         })
         .select()
 
