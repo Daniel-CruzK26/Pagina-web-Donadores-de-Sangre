@@ -177,3 +177,50 @@ export function formatDistance(km) {
   }
   return `${km.toFixed(1)} km`
 }
+
+// Búsqueda de lugares (geocoding) usando Nominatim
+export async function searchPlaces(query, countryCode = 'mx') {
+  if (!query || query.trim().length < 3) {
+    return []
+  }
+
+  try {
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/search?` +
+      `q=${encodeURIComponent(query)}&` +
+      `countrycodes=${countryCode}&` +
+      `format=json&` +
+      `addressdetails=1&` +
+      `limit=5&` +
+      `accept-language=es`,
+      {
+        headers: {
+          'User-Agent': 'DonadoresdeSangre/1.0'
+        }
+      }
+    )
+
+    if (!response.ok) {
+      throw new Error('Error en la búsqueda')
+    }
+
+    const data = await response.json()
+
+    // Formatear resultados
+    return data.map(place => ({
+      id: place.place_id,
+      name: place.display_name,
+      lat: parseFloat(place.lat),
+      lng: parseFloat(place.lon),
+      address: {
+        street: place.address?.road || '',
+        city: place.address?.city || place.address?.town || place.address?.municipality || '',
+        state: place.address?.state || '',
+        country: place.address?.country || 'México'
+      }
+    }))
+  } catch (error) {
+    console.error('Error en búsqueda de lugares:', error)
+    return []
+  }
+}

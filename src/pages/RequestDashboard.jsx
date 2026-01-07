@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../contexts/AuthContext'
 import { BLOOD_TYPES } from '../utils/bloodTypeMatching'
 import { MapPicker } from '../components/MapPicker'
+import { HospitalAutocomplete } from '../components/HospitalAutocomplete'
 import { ResponsesList } from '../components/ResponsesList'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -24,6 +25,8 @@ export function RequestDashboard() {
   const [canCreateMore, setCanCreateMore] = useState(true)
   const [activeRequestsCount, setActiveRequestsCount] = useState(0)
   const [selectedRequestForResponses, setSelectedRequestForResponses] = useState(null)
+  const [mapPosition, setMapPosition] = useState(null)
+  const [useManualLocation, setUseManualLocation] = useState(false)
 
   const [formData, setFormData] = useState({
     patient_name: '',
@@ -51,22 +54,30 @@ export function RequestDashboard() {
   const loadMyRequests = async () => {
     try {
       setLoading(true)
-      const { data, error } = await supabase
+      
+      // Obtener solicitudes
+      const { data: requests, error: requestsError } = await supabase
         .from('donation_requests')
-        .select(`
-          *,
-          donor_responses(count)
-        `)
+        .select('*')
         .eq('requester_id', profile.id)
         .order('created_at', { descending: true })
 
-      if (error) throw error
+      if (requestsError) throw requestsError
 
-      // Agregar el conteo de respuestas a cada solicitud
-      const requestsWithCount = data?.map(request => ({
-        ...request,
-        response_count: request.donor_responses?.[0]?.count || 0
-      })) || []
+      // Obtener conteos de respuestas para cada solicitud
+      const requestsWithCount = await Promise.all(
+        (requests || []).map(async (request) => {
+          const { count, error: countError } = await supabase
+            .from('donor_responses')
+            .select('*', { count: 'exact', head: true })
+            .eq('request_id', request.id)
+
+          return {
+            ...request,
+            response_count: countError ? 0 : (count || 0)
+          }
+        })
+      )
 
       setMyRequests(requestsWithCount)
       
@@ -93,8 +104,26 @@ export function RequestDashboard() {
       hospital_lng: lng,
       hospital_address: address,
       hospital_city: addressData.city,
-      hospital_state: addressData.state
+      hospital_state: addressData.state,
+      // Si está en modo manual y no hay nombre, usar la dirección
+      hospital_name: useManualLocation && !prev.hospital_name 
+        ? `Hospital en ${addressData.city}` 
+        : prev.hospital_name
     }))
+  }
+
+  const handlePlaceSelect = (place) => {
+    setFormData(prev => ({
+      ...prev,
+      hospital_name: place.name.split(',')[0], // Usar solo el primer nombre
+      hospital_lat: place.lat,
+      hospital_lng: place.lng,
+      hospital_address: place.name,
+      hospital_city: place.address.city,
+      hospital_state: place.address.state
+    }))
+    setMapPosition([place.lat, place.lng])
+    setUseManualLocation(false)
   }
 
   const handleSubmit = async (e) => {
@@ -169,6 +198,9 @@ export function RequestDashboard() {
         urgency: 'medium',
         max_responses: 5
       })
+
+      setMapPosition(null)
+      setUseManualLocation(false)
 
       // Recargar solicitudes y cambiar a tab activas
       await loadMyRequests()
@@ -342,22 +374,52 @@ export function RequestDashboard() {
           <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
             Nombre del hospital *
           </label>
-          <input
-            type="text"
-            name="hospital_name"
+          <HospitalAutocomplete
             value={formData.hospital_name}
-            onChange={handleChange}
-            required
-            disabled={!canCreateMore}
-            style={{
-              width: '100%',
-              padding: '0.75rem',
-              border: '2px solid #e0e0e0',
-              borderRadius: 'var(--radius-sm)',
-              fontSize: '1rem'
-            }}
-            placeholder="Ej: Hospital General de México"
+            onChange={(value) => setFormData(prev => ({ ...prev, hospital_name: value }))}
+            onPlaceSelect={handlePlaceSelect}
+            disabled={!canCreateMore || useManualLocation}
           />
+          {!useManualLocation && (
+            <p style={{ fontSize: '0.85rem', color: '#666', marginTop: '0.5rem' }}>
+              💡 Escribe el nombre del hospital y selecciona de las sugerencias, o{' '}
+              <button
+                type="button"
+                onClick={() => setUseManualLocation(true)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--primary-color)',
+                  textDecoration: 'underline',
+                  cursor: 'pointer',
+                  padding: 0,
+                  font: 'inherit'
+                }}
+              >
+                usa el mapa manualmente
+              </button>
+            </p>
+          )}
+          {useManualLocation && (
+            <p style={{ fontSize: '0.85rem', color: '#666', marginTop: '0.5rem' }}>
+              📍 Modo manual activado.{' '}
+              <button
+                type="button"
+                onClick={() => setUseManualLocation(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--primary-color)',
+                  textDecoration: 'underline',
+                  cursor: 'pointer',
+                  padding: 0,
+                  font: 'inherit'
+                }}
+              >
+                Volver a búsqueda automática
+              </button>
+            </p>
+          )}
         </div>
 
         <div style={{ marginBottom: '1.5rem' }}>
@@ -367,7 +429,7 @@ export function RequestDashboard() {
           {canCreateMore && (
             <MapPicker
               onLocationSelect={handleLocationSelect}
-              initialPosition={formData.hospital_lat && formData.hospital_lng ? [formData.hospital_lat, formData.hospital_lng] : null}
+              initialPosition={mapPosition || (formData.hospital_lat && formData.hospital_lng ? [formData.hospital_lat, formData.hospital_lng] : null)}
             />
           )}
           {formData.hospital_address && (
