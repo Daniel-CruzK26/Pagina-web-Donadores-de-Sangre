@@ -85,6 +85,41 @@ export function ResponsesList({ requestId, maxResponses }) {
         .eq('id', responseId)
 
       if (error) throw error
+      
+      // Si marcamos como completado, verificar si se alcanzó el límite de unidades
+      if (newStatus === 'completed') {
+        // Obtener la solicitud para saber cuántas unidades se necesitan
+        const { data: requestData, error: requestError } = await supabase
+          .from('donation_requests')
+          .select('id, units_needed, status')
+          .eq('id', requestId)
+          .single()
+
+        if (!requestError && requestData) {
+          // Contar cuántas respuestas están completadas
+          const { count, error: countError } = await supabase
+            .from('donor_responses')
+            .select('*', { count: 'exact', head: true })
+            .eq('request_id', requestId)
+            .eq('status', 'completed')
+
+          // Si ya se alcanzaron las unidades necesarias, marcar solicitud como completada
+          if (!countError && count >= requestData.units_needed && requestData.status === 'active') {
+            const { error: updateRequestError } = await supabase
+              .from('donation_requests')
+              .update({ status: 'fulfilled' })
+              .eq('id', requestId)
+
+            if (!updateRequestError) {
+              toast.success('¡Solicitud completada automáticamente! Se alcanzaron todas las unidades necesarias', {
+                duration: 5000,
+                icon: '🎉'
+              })
+            }
+          }
+        }
+      }
+
       toast.success('Estado actualizado')
       loadResponses()
     } catch (error) {
