@@ -40,14 +40,10 @@ export function DonorDashboard() {
     try {
       setLoading(true)
 
-      // Obtener todas las solicitudes activas con conteo de respuestas
+      // Obtener todas las solicitudes activas
       const { data, error } = await supabase
         .from('donation_requests')
-        .select(`
-          *,
-          profiles!requester_id(full_name),
-          donor_responses(count)
-        `)
+        .select('*')
         .eq('status', 'active')
         .gt('expires_at', new Date().toISOString())
         .order('urgency', { ascending: false })
@@ -55,15 +51,9 @@ export function DonorDashboard() {
 
       if (error) throw error
 
-      // Agregar el conteo de respuestas a cada solicitud
-      const requestsWithCount = data.map(request => ({
-        ...request,
-        response_count: request.donor_responses?.[0]?.count || 0
-      }))
-
       // Filtrar por compatibilidad de sangre
       const compatibleTypes = getCompatibleDonors(profile.blood_type)
-      let filteredRequests = requestsWithCount.filter(req =>
+      let filteredRequests = data.filter(req =>
         compatibleTypes.includes(profile.blood_type)
       )
 

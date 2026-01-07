@@ -51,10 +51,15 @@ export function AuthProvider({ children }) {
         .eq('id', userId)
         .single()
 
-      if (error) throw error
-      setProfile(data)
+      if (error) {
+        console.error('Error al cargar perfil:', error)
+        setProfile(null)
+      } else {
+        setProfile(data)
+      }
     } catch (error) {
       console.error('Error al cargar perfil:', error)
+      setProfile(null)
     } finally {
       setLoading(false)
     }

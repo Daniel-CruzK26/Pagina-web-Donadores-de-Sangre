@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
+import { supabase } from '../../lib/supabaseClient'
 import toast from 'react-hot-toast'
 
 export function Login() {
@@ -17,12 +18,31 @@ export function Login() {
     setLoading(true)
 
     try {
-      const { error } = await signIn(formData.email, formData.password)
+      const { data, error } = await signIn(formData.email, formData.password)
 
       if (error) throw error
 
+      // Obtener el perfil para saber el rol
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', data.user.id)
+        .single()
+
+      if (profileError) {
+        console.error('Error al obtener perfil:', profileError)
+        // Si hay error, ir por defecto a donar
+        navigate('/donar')
+      } else {
+        // Redirigir según el rol
+        if (profileData.role === 'requester') {
+          navigate('/solicitar')
+        } else {
+          navigate('/donar')
+        }
+      }
+
       toast.success('¡Bienvenido de nuevo!')
-      navigate('/donar')
     } catch (error) {
       console.error('Error al iniciar sesión:', error)
       toast.error(error.message || 'Error al iniciar sesión')
