@@ -44,16 +44,34 @@
 .nav-links {
   display: flex;
   gap: 2rem;
+  align-items: center;
 }
 
 .nav-link {
   font-weight: 500;
   color: var(--text-secondary);
   transition: var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
 }
 
 .nav-link:hover {
   color: var(--primary-color);
+}
+
+.nav-button-register {
+  background-color: var(--primary-color);
+  color: white !important;
+  padding: 0.5rem 1.25rem;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  transition: var(--transition-fast);
+}
+
+.nav-button-register:hover {
+  background-color: var(--primary-dark);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 /* Hero Section */
@@ -92,6 +110,7 @@
   transition: var(--transition-normal);
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
   box-shadow: var(--shadow-md);
 }
@@ -507,10 +526,18 @@
   display: none !important;
 }
 
+/* Controles de Leaflet - deben estar por debajo del navbar */
+.leaflet-control-container,
+.leaflet-top,
+.leaflet-bottom {
+  z-index: 400 !important;
+}
+
 /* Custom Zoom Controls - Red Rounded Buttons */
 .leaflet-control-zoom {
   border: none !important;
   box-shadow: var(--shadow-md) !important;
+  z-index: 500 !important;
 }
 
 .leaflet-control-zoom a {

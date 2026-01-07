@@ -86,14 +86,7 @@ const Navbar = () => {
               <Link to="/login" className="nav-link">Iniciar Sesión</Link>
               <Link
                 to="/signup"
-                className="nav-link"
-                style={{
-                  backgroundColor: 'var(--primary-color)',
-                  color: 'white',
-                  padding: '0.5rem 1.25rem',
-                  borderRadius: 'var(--border-radius-md)',
-                  fontWeight: '600'
-                }}
+                className="nav-link nav-button-register"
               >
                 Registrarse
               </Link>
