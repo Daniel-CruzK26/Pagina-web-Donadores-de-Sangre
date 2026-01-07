@@ -228,7 +228,7 @@ export function RequestDashboard() {
       if (error) throw error
 
       toast.success(`Solicitud marcada como ${newStatus === 'fulfilled' ? 'completada' : 'cancelada'}`)
-      loadMyRequests()
+      await loadMyRequests()
     } catch (error) {
       console.error('Error al actualizar:', error)
       toast.error('Error al actualizar solicitud')

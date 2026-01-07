@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../contexts/AuthContext'
-import { getCompatibleDonors } from '../utils/bloodTypeMatching'
+import { canDonateToPatient } from '../utils/bloodTypeMatching'
 import { calculateDistance, formatDistance } from '../utils/geolocation'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -52,14 +52,16 @@ export function DonorDashboard() {
       if (error) throw error
 
       // Filtrar por compatibilidad de sangre
-      const compatibleTypes = getCompatibleDonors(profile.blood_type)
-      let filteredRequests = data.filter(req =>
-        compatibleTypes.includes(profile.blood_type)
+      // Si el donador es A+, puede donar a: A+, AB+
+      // Solo mostrar solicitudes donde el donador PUEDE donar al paciente
+      const filteredRequests = data.filter(req => 
+        canDonateToPatient(profile.blood_type, req.patient_blood_type)
       )
 
       // Calcular distancia si el usuario tiene ubicación
+      let requestsWithDistance = filteredRequests
       if (profile.location_lat && profile.location_lng) {
-        filteredRequests = filteredRequests.map(req => ({
+        requestsWithDistance = filteredRequests.map(req => ({
           ...req,
           distance: calculateDistance(
             profile.location_lat,
@@ -70,7 +72,7 @@ export function DonorDashboard() {
         }))
 
         // Ordenar por urgencia y luego por distancia
-        filteredRequests.sort((a, b) => {
+        requestsWithDistance.sort((a, b) => {
           const urgencyOrder = { urgent: 0, high: 1, medium: 2, low: 3 }
           const urgencyDiff = urgencyOrder[a.urgency] - urgencyOrder[b.urgency]
           if (urgencyDiff !== 0) return urgencyDiff
@@ -80,7 +82,7 @@ export function DonorDashboard() {
 
       // Obtener conteos de respuestas
       const requestsWithCounts = await Promise.all(
-        filteredRequests.map(async (req) => {
+        requestsWithDistance.map(async (req) => {
           const { count } = await supabase
             .from('donor_responses')
             .select('*', { count: 'exact', head: true })

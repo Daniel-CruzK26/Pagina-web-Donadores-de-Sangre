@@ -16,7 +16,6 @@ export function Signup() {
     full_name: '',
     phone: '',
     blood_type: '',
-    role: 'donor',
     terms_accepted: false
   })
 
@@ -58,20 +57,13 @@ export function Signup() {
       const { error } = await signUp(formData.email, formData.password, {
         full_name: formData.full_name,
         phone: phoneWithPrefix,
-        blood_type: formData.blood_type,
-        role: formData.role
+        blood_type: formData.blood_type
       })
 
       if (error) throw error
 
       toast.success('¡Cuenta creada exitosamente!')
-      
-      // Redirigir según el rol
-      if (formData.role === 'donor') {
-        navigate('/donar')
-      } else {
-        navigate('/solicitar')
-      }
+      navigate('/')
     } catch (error) {
       console.error('Error al registrarse:', error)
       toast.error(error.message || 'Error al crear cuenta')
@@ -276,44 +268,6 @@ export function Signup() {
                 </option>
               ))}
             </select>
-          </div>
-
-          <div style={{ marginBottom: '1.25rem' }}>
-            <label
-              htmlFor="role"
-              style={{
-                display: 'block',
-                marginBottom: '0.5rem',
-                fontWeight: '500',
-                color: '#333'
-              }}
-            >
-              ¿Cómo deseas usar la plataforma? *
-            </label>
-            <select
-              id="role"
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-              required
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                borderRadius: 'var(--border-radius-sm)',
-                border: '2px solid #e0e0e0',
-                fontSize: '1rem',
-                transition: 'border-color 0.3s ease',
-                cursor: 'pointer'
-              }}
-              onFocus={(e) => e.target.style.borderColor = 'var(--primary-color)'}
-              onBlur={(e) => e.target.style.borderColor = '#e0e0e0'}
-            >
-              <option value="donor">Quiero donar sangre 🩸</option>
-              <option value="requester">Necesito buscar donadores 🏥</option>
-            </select>
-            <small style={{ color: '#666', fontSize: '0.85rem', marginTop: '0.5rem', display: 'block' }}>
-              Podrás acceder a las funciones según tu selección
-            </small>
           </div>
 
           <div style={{ marginBottom: '1.25rem' }}>
